@@ -4,25 +4,39 @@
 
 1. **Créer un Dockerfile :**
 
-    ```Dockerfile
+ ```Dockerfile
 
-    FROM node:14-alpine
+   # Stage 1: Build stage
+FROM node:14-alpine AS build
 
-    WORKDIR /usr/src/app
+WORKDIR /usr/src/app
 
-    COPY package*.json ./
-    COPY tsconfig.json ./
+COPY package*.json ./
+COPY tsconfig.json ./
 
-    RUN npm install
+RUN npm install
 
-    COPY . .
+COPY . .
 
-    RUN npm run build
+RUN npm run build
 
-    EXPOSE 8080
+# Stage 2: Execution stage
+FROM node:14-alpine AS execution
 
-    CMD ["node", "build/index.js"]
-    ```
+WORKDIR /usr/src/app
+
+# Créer un utilisateur non-root pour l'exécution du serveur web
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Copier uniquement les fichiers nécessaires pour l'exécution (build/ et node_modules/)
+COPY --from=build /usr/src/app/build ./build
+COPY --from=build /usr/src/app/node_modules ./node_modules
+
+EXPOSE 8080
+
+CMD ["node", "build/index.js"]
+```
 
 
 3. **Construire l'image Docker :**
@@ -61,3 +75,7 @@ Cette commande permet d'éxecuter le scan et stock le resultat du scan en locale
 3. **Visualiser les résultats :**
 
     Après avoir exécuté la commande, ouvrez le fichier "scan.txt" pour consulter les résultats du scan Trivy.
+
+# Conclusion
+
+L'image Docker est configurée pour exécuter le serveur web avec un utilisateur spécifique. De plus, une seconde image Docker optimisée a été créée, avec un stage de build et un stage d'exécution distincts, ce dernier excluant les sources du projet pour des raisons de sécurité et d'efficacité.
