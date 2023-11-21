@@ -1,0 +1,3 @@
+Lire un livre Rust
+Faire les courses
+Apprendre Rust
