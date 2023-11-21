@@ -3,37 +3,22 @@
 1. **Créer un Dockerfile (partie 2 du tp) :**
 
 ```Dockerfile
+FROM node:14-alpine
 
-  # Stage 1: Build stage
-FROM node:14-alpine AS build
 
-WORKDIR /usr/src/app
+    COPY package*.json ./
+    COPY tsconfig.json ./
 
-COPY package*.json ./
-COPY tsconfig.json ./
 
-RUN npm install
+    RUN npm install
 
-COPY . .
+    COPY . .
 
-RUN npm run build
+    RUN npm run build
 
-# Stage 2: Execution stage
-FROM node:14-alpine AS execution
+    EXPOSE 8080
 
-WORKDIR /usr/src/app
-
-# Créer un utilisateur non-root pour l'exécution du serveur web
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
-# Copier uniquement les fichiers nécessaires pour l'exécution (build/ et node_modules/)
-COPY --from=build /usr/src/app/build ./build
-COPY --from=build /usr/src/app/node_modules ./node_modules
-
-EXPOSE 8080
-
-CMD ["node", "build/index.js"]
+    CMD ["node", "build/index.js"]
 ```
 
 2. **Construire l'image Docker :**
