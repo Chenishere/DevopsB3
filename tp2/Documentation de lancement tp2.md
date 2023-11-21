@@ -1,12 +1,10 @@
 # Déploiement de l'API avec Docker
 
-## Construction de l'image Docker
+1. **Créer un Dockerfile (partie 2 du tp) :**
 
-1. **Créer un Dockerfile :**
+```Dockerfile
 
- ```Dockerfile
-
-   # Stage 1: Build stage
+  # Stage 1: Build stage
 FROM node:14-alpine AS build
 
 WORKDIR /usr/src/app
@@ -38,21 +36,19 @@ EXPOSE 8080
 CMD ["node", "build/index.js"]
 ```
 
+2. **Construire l'image Docker :**
 
-3. **Construire l'image Docker :**
-
-    ```bash
-    docker build -t tp2 .
-    ```
-
+   ```bash
+   docker build -t tp2 .
+   ```
 
 Ici, tp2 est le nom que j'ai donné a mon image docker
 
-4. **Lancer le conteneur Docker :**
+3. **Lancer le conteneur Docker :**
 
-    ```bash
-    docker run -p 8080:8080 -d tp2
-    ```
+   ```bash
+   docker run -p 8080:8080 -d tp2
+   ```
 
 ## Scanner l'image Docker avec Trivy
 
@@ -62,19 +58,55 @@ Ici, tp2 est le nom que j'ai donné a mon image docker
 brew install trivy
 ```
 
+2.  **Scanner l'image Docker et sauvegarder les résultats dans un fichier texte :**
 
-2. **Scanner l'image Docker et sauvegarder les résultats dans un fichier texte :**
+        - Pour une image locale :
 
-    - Pour une image locale :
+            ```bash
+            trivy image tp2 > scan.txt
+            ```
 
-        ```bash
-        trivy image tp2 > scan.txt
-        ```
-Cette commande permet d'éxecuter le scan et stock le resultat du scan en locale sur le fichier scan.txt
+    Cette commande permet d'éxecuter le scan et stock le resultat du scan en locale sur le fichier scan.txt
 
-3. **Visualiser les résultats :**
+3.  **Visualiser les résultats :**
 
     Après avoir exécuté la commande, ouvrez le fichier "scan.txt" pour consulter les résultats du scan Trivy.
+
+4.  **Créer un Dockerfile (partie 2 du tp) :**
+
+```Dockerfile
+
+  # Stage 1: Build stage
+FROM node:14-alpine AS build
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+COPY tsconfig.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# Stage 2: Execution stage
+FROM node:14-alpine AS execution
+
+WORKDIR /usr/src/app
+
+# Créer un utilisateur non-root pour l'exécution du serveur web
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Copier uniquement les fichiers nécessaires pour l'exécution (build/ et node_modules/)
+COPY --from=build /usr/src/app/build ./build
+COPY --from=build /usr/src/app/node_modules ./node_modules
+
+EXPOSE 8080
+
+CMD ["node", "build/index.js"]
+```
 
 # Conclusion
 
