@@ -1,0 +1,24 @@
+version: "3"
+services:
+  app:
+    image: <link>wik-dps-tp02-ts-multi</link>
+    build:
+      context: .
+      dockerfile: multi-stage.dockerfile
+    restart: always
+    deploy:
+      replicas: 4
+    networks:
+      - mynetwork
+  nginx:
+    image: <link>nginx</link>
+    ports:
+      - 8080:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app
+    networks:
+      - mynetwork
+networks:
+  mynetwork:
